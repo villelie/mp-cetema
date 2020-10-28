@@ -16,9 +16,15 @@ export default class App extends React.Component {
 }
 
 mapMarkers = () => {
-  return this.state.result.map((result) => <Marker
+
+  const currentTime = Date.now()
+  const minusTime = currentTime - 3600000 
+
+  return this.state.result.filter( result => result.properties.timestampExternal >= minusTime).map((result) => <Marker
     key={result.mmsi}
-    coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}>
+    coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
+    title={result.mmsi.toString()}
+    description={((currentTime - result.properties.timestampExternal) / 1000).toString()}>
   </Marker >)
 }
 
@@ -42,7 +48,7 @@ mapMarkers = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#ffff',
     alignItems: 'center',
     justifyContent: 'center',
   },

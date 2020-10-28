@@ -17,10 +17,14 @@ export default class App extends React.Component {
 
 mapMarkers = () => {
 
+  //get current time in milliseconds from unix epoch
   const currentTime = Date.now()
-  const minusTime = currentTime - 3600000 
 
-  return this.state.result.filter( result => result.properties.timestampExternal >= minusTime).map((result) => <Marker
+  //current time minus 1 hour in milliseconds
+  const filterTime = currentTime - 3600000 
+
+  //accept results when result timestamp is larger than the filterTime
+  return this.state.result.filter(result => result.properties.timestampExternal >= filterTime).map((result) => <Marker
     key={result.mmsi}
     coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
     title={result.mmsi.toString()}

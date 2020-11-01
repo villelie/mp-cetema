@@ -5,6 +5,14 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "android": {
+      "package": "com.boatcrew",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBhM7GLRK4C9encaryTEky07Tid5DZoZYk"
+        }
+      }
+    },
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",

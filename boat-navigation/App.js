@@ -1,35 +1,63 @@
 import React from 'react';
-import { AppLoading } from 'expo';
-import { Container, Text, Button } from 'native-base';
-import * as Font from 'expo-font';
-import { Ionicons } from '@expo/vector-icons';
+import MapView, { Marker } from 'react-native-maps'
+import { StyleSheet, View, Dimensions } from 'react-native';
 
 export default class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isReady: false,
-    };
-  }
 
-  async componentDidMount() {
-    await Font.loadAsync({
-      Roboto: require('native-base/Fonts/Roboto.ttf'),
-      Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-      ...Ionicons.font,
-    });
-    this.setState({ isReady: true });
-  }
+  state = { result: [] }
+
+  componentDidMount() {
+    fetch('https://meri.digitraffic.fi/api/v1/locations/latest')
+      .then(res => res.json())
+      .then(data => {
+        this.setState({ result: data.features })
+      })
+      .catch(console.error)
+}
+
+mapMarkers = () => {
+
+  //get current time in milliseconds from unix epoch
+  const currentTime = Date.now()
+
+  //current time minus 1 hour in milliseconds
+  const filterTime = currentTime - 3600000 
+
+  //accept results when result timestamp is larger than the filterTime
+  return this.state.result.filter(result => result.properties.timestampExternal >= filterTime).map((result) => <Marker
+    key={result.mmsi}
+    coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
+    title={result.mmsi.toString()}
+    description={((currentTime - result.properties.timestampExternal) / 1000).toString()}>
+  </Marker >)
+}
 
   render() {
-    if (!this.state.isReady) {
-      return <AppLoading />;
-    }
-
     return (
-      <Container>
-        <Button><Text>Hello worldi jne</Text></Button>
-      </Container>
+      <View style={styles.container}>
+        <MapView style={styles.mapStyle}
+                initialRegion={{
+                  latitude: 60.1587262,
+                  longitude: 24.922834,
+                  latitudeDelta: 0.1,
+                  longitudeDelta: 0.1
+                }} >
+                {this.mapMarkers()}
+              </MapView>
+      </View>
     );
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mapStyle: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+  },
+});

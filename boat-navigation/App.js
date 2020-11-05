@@ -1,63 +1,57 @@
 import React from 'react';
-import MapView, { Marker } from 'react-native-maps'
-import { StyleSheet, View, Dimensions } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 
-export default class App extends React.Component {
+import LoginScreen from './screens/LoginScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import MapScreen from './screens/MapScreen';
 
-  state = { result: [] }
+const Stack = createStackNavigator();
 
-  componentDidMount() {
-    fetch('https://meri.digitraffic.fi/api/v1/locations/latest')
-      .then(res => res.json())
-      .then(data => {
-        this.setState({ result: data.features })
-      })
-      .catch(console.error)
-}
-
-mapMarkers = () => {
-
-  //get current time in milliseconds from unix epoch
-  const currentTime = Date.now()
-
-  //current time minus 1 hour in milliseconds
-  const filterTime = currentTime - 3600000 
-
-  //accept results when result timestamp is larger than the filterTime
-  return this.state.result.filter(result => result.properties.timestampExternal >= filterTime).map((result) => <Marker
-    key={result.mmsi}
-    coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
-    title={result.mmsi.toString()}
-    description={((currentTime - result.properties.timestampExternal) / 1000).toString()}>
-  </Marker >)
-}
-
-  render() {
+  function MyStack() {
     return (
-      <View style={styles.container}>
-        <MapView style={styles.mapStyle}
-                initialRegion={{
-                  latitude: 60.1587262,
-                  longitude: 24.922834,
-                  latitudeDelta: 0.1,
-                  longitudeDelta: 0.1
-                }} >
-                {this.mapMarkers()}
-              </MapView>
-      </View>
+      <Stack.Navigator
+        initialRouteName="RegisterScreen"
+        screenOptions={{
+          headerTitleAlign: 'center',
+          headerStyle: {
+            backgroundColor: '#3740FE',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}>
+        <Stack.Screen 
+          name="RegisterScreen" 
+          component={RegisterScreen} 
+          options={{ title: 'Register' }}
+        />       
+        <Stack.Screen 
+          name="LoginScreen" 
+          component={LoginScreen} 
+          options={
+            {title: 'Login'},
+            {headerLeft: null} 
+          }
+        />
+        <Stack.Screen 
+         name="MapScreen" 
+         component={MapScreen} 
+         options={
+           { title: 'Map' },
+           {headerLeft: null} 
+         }
+        />
+      </Stack.Navigator>
     );
   }
-}
+  
+  export default function App() {
+    return (
+      <NavigationContainer>
+        <MyStack />
+      </NavigationContainer>
+    );
+  }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapStyle: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-  },
-});

@@ -62,7 +62,7 @@ function SettingsStack() {
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: 'Profile Page' }}
+        options={{ title: 'Nautical warnings' }}
       />
     </Stack.Navigator>
   );

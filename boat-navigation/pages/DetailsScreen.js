@@ -1,15 +1,20 @@
 import React, { Component } from 'react';
-import { ActivityIndicator, FlatList, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Text, View, TouchableOpacity } from 'react-native';
 
 export default class DetailsScreen extends Component {
   constructor(props) {
     super(props);
     console.disableYellowBox = true;
+    this.goToDetailScreen = this.goToDetailScreen.bind(this);
 
     this.state = {
       data: [],
       isLoading: true
     };
+  }
+
+  goToDetailScreen() {
+    this.props.navigation.navigate('Profile');
   }
 
   componentDidMount() {
@@ -44,9 +49,12 @@ export default class DetailsScreen extends Component {
             keyExtractor={({ id }, index) => id}
             renderItem={({ item }) => (
             <View>
+            <TouchableOpacity onPress={() => this.goToDetailScreen()}>
             <Text style={{ fontSize: 20, fontWeight: "bold" }}>{item.properties.areasEn}</Text>
             <Text>{item.properties.locationEn, item.properties.contentsEn}</Text>
+            </TouchableOpacity>
             </View>
+            
             )}
           />
         )}

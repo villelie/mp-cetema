@@ -28,7 +28,7 @@ const SettingsScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate('Details')}>
-            <Text>Open Info Screen</Text>
+            <Text>Nautical warnings</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,16 +1,16 @@
 import React from 'react';
 import { Button, Text, View } from 'react-native';
 
-const SettingsScreen = ({ navigation }) => {
+const InfoScreen = ({ navigation }) => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Settings screen</Text>
+      <Text>Info screen</Text>
       <Button
-        title="Go to Details"
-        onPress={() => navigation.navigate('Details')}
+        title="Show nautical warnings"
+        onPress={() => navigation.navigate('Nautical Warnings')}
       />
     </View>
   );
 }
 
-export default SettingsScreen;
+export default InfoScreen;

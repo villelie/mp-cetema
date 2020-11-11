@@ -9,8 +9,8 @@ let LOCATION_TASK = "backgroundLocation";
 
 TaskManager.defineTask(LOCATION_TASK, ({ data: { locations }, error }) => {
     if (error) {
-      console.error(error);
-      return;
+        console.error(error);
+        return;
     }
     console.log('Received new locations');
 });
@@ -19,22 +19,32 @@ export default class MapScreen extends React.Component {
     constructor() {
 
         //ignore yellow errors
-        LogBox.ignoreLogs
+        LogBox.ignoreAllLogs(true)
 
         super();
         this.state = {
+            initialRegion: {
+                latitude: 60.1587262,
+                longitude: 24.922834,
+                latitudeDelta: 0.1,
+                longitudeDelta: 0.1
+            },
             uid: '',
-            result: []
+            result: [],
+            userMarkers: []
         }
     }
 
     componentDidMount() {
         firebase.auth().onAuthStateChanged(user => {
-            this.setState({
-                uid: firebase.auth().currentUser.uid,
-            });
-            this.getUserLocation();
-            console.log("firebase user uid:", this.state.uid)
+            if (user) {
+                this.getUserLocation()
+                this.setState({
+                    uid: firebase.auth().currentUser.uid,
+                });
+            } else {
+                console.log("user not logged in")
+            }
         });
 
         fetch('https://meri.digitraffic.fi/api/v1/locations/latest')
@@ -43,6 +53,10 @@ export default class MapScreen extends React.Component {
                 this.setState({ result: data.features })
             })
             .catch(console.error)
+    }
+
+    componentWillMount() {
+        this.getMarkers();
     }
 
     async componentWillUnmount() {
@@ -98,34 +112,45 @@ export default class MapScreen extends React.Component {
     }
 
     persistLocation = async (location) => {
-        let coords = {
-            uid: this.state.uid,
-            latitude: [location.coords.latitude],
-            longitude: [location.coords.longitude],
-            speed: [location.coords.speed],
-            heading: [location.coords.heading],
-            timestamp: [location.timestamp]
-        };
-
-        firebase.firestore().collection('locations').doc(coords.uid).set(coords, { merge: true }).then((docRef) => {
-            console.log('New document added', JSON.stringify(coords));
+        firebase.firestore().collection('locations').doc(this.state.uid).set(location, { merge: true }).then((docRef) => {
+            console.log('New document added', JSON.stringify(location));
         }).catch((error) => {
             console.error('Error adding document: ', error);
         });
     }
 
+    getMarkers = () => {
+        firebase.firestore().collection('locations').get().then(snapshot => {
+            let userMarkers = []
+            snapshot.forEach(location => {
+                userMarkers.push(location.data())
+            });
+            this.setState({ userMarkers });
+        });
+    }
+
+    createMarkers = () => {
+        console.log("createMarkers", this.state.userMarkers)
+        return this.state.userMarkers.map((location, index) => {
+            if (location.coords.latitude && location.coords.longitude) {
+                return (<Marker
+                    key={index}
+                    coordinate={{ latitude: location.coords.latitude, longitude: location.coords.longitude }}
+                    title={"x"}
+                    description={"x"}>
+                </Marker>)
+            }
+        })
+    }
+
     render() {
         return (
             <View style={styles.container}>
-                <MapView style={styles.mapStyle}
+                <MapView
+                    style={styles.mapStyle}
                     showsUserLocation={true}
-                    initialRegion={{
-                        latitude: 60.1587262,
-                        longitude: 24.922834,
-                        latitudeDelta: 0.1,
-                        longitudeDelta: 0.1
-                    }} >
-                    {this.mapMarkers()}
+                    initialRegion={this.state.initialRegion}>
+                    {this.createMarkers()}
                 </MapView>
             </View>
         );

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, TextInput, Button, Alert, ActivityIndicator } from 'react-native';
-import firebase from '../database/firebase';
+import firebase from '../helpers/firebase';
 
 // https://www.positronx.io/react-native-firebase-login-and-user-registration-tutorial/
 

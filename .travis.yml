@@ -3,8 +3,9 @@ node_js:
   - node
   - lts/*
 before_script:
-  - cd boat-navigation
-  - npm i
   - npm i mocha -g
+  - npm i yarn -g
+  - cd boat-navigation
+  - yarn install
 script:
-  - npm test
+  - yarn test

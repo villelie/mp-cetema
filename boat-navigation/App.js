@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { StatusBar } from 'react-native';
-import Navigation from './pages/Navigator';
-import { colors } from './GlobalVariables';
+import Navigation from './screens/Navigator';
+import { colors } from './helpers/globalVariables';
 
 
 const App = () => {

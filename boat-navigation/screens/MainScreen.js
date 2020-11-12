@@ -1,7 +1,18 @@
 import React from 'react';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
 import { View, Dimensions } from 'react-native';
-import { mapStyles } from './mapStyle';
+import { mapStyles } from '../helpers/mapStyle';
+import * as TaskManager from 'expo-task-manager';
+
+let LOCATION_TASK = "backgroundLocation";
+
+TaskManager.defineTask(LOCATION_TASK, ({ data: { locations }, error }) => {
+  if (error) {
+    console.error(error);
+    return;
+  }
+  console.log('Received new locations');
+});
 
 export default class MainScreen extends React.Component {
 
@@ -27,21 +38,18 @@ export default class MainScreen extends React.Component {
     fetch('https://meri.digitraffic.fi/api/v1/locations/latest')
       .then(res => res.json())
       .then(data => {
-        this.setState({ result: data.features })
+        const currentTime = Date.now()
+        const filterTime = currentTime - 3600000
+
+        const filtered = data.features.filter(result => result.properties.timestampExternal >= filterTime)
+        this.setState({ result: filtered })
       })
       .catch(console.error)
   }
 
   mapMarkers = () => {
-
-    //get current time in milliseconds from unix epoch
     const currentTime = Date.now()
-
-    //current time minus 1 hour in milliseconds
-    const filterTime = currentTime - 3600000
-
-    //accept results when result timestamp is larger than the filterTime
-    return this.state.result.filter(result => result.properties.timestampExternal >= filterTime).map((result) => <Marker
+    return this.state.result.map((result) => <Marker
       key={result.mmsi}
       coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
       title={result.mmsi.toString()}
@@ -52,6 +60,7 @@ export default class MainScreen extends React.Component {
 
   handleUserLocation = () => {
     navigator.geolocation.getCurrentPosition(pos => {
+      console.log(pos);
       this.map.animateToRegion({
         ...this.state.initialRegion,
         latitude: pos.coords.latitude,
@@ -71,15 +80,7 @@ export default class MainScreen extends React.Component {
     )
   }
 
-  /*onChangeValue = initialRegion =>{
-    ToastAndroid.show(JSON.stringify(initialRegion), ToastAndroid.SHORT)
-    this.setState ({
-      initialRegion
-    })
-  }*/
-
   render() {
-    //console.disableYellowBox = true;
     return (
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>

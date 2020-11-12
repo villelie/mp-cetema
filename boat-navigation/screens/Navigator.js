@@ -10,7 +10,7 @@ import SettingsScreen from './SettingsScreen';
 import NauticalScreen from './NauticalScreen';
 import NauticalDetails from './NauticalScreenSingle';
 
-import { colors } from '../GlobalVariables';
+import { colors } from '../helpers/globalVariables';
 
 const InfoStack = createStackNavigator();
 

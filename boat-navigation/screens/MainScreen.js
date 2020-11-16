@@ -16,7 +16,7 @@ TaskManager.defineTask(LOCATION_TASK, ({ data: { locations }, error }) => {
   console.log('Received new locations');
 });
 
-export default class MapScreen extends React.Component {
+export default class MainScreen extends React.Component {
   constructor() {
 
     //ignore yellow errors
@@ -31,13 +31,15 @@ export default class MapScreen extends React.Component {
         longitudeDelta: 0.1
       },
       uid: '',
-      result: [],
+      shipLocations: [],
+      shipMetadata: [],
+      combinedResult: [],
       userMarkers: []
     }
   }
 
   componentDidMount() {
-    firebase.auth().onAuthStateChanged(user => {
+    /*firebase.auth().onAuthStateChanged(user => {
       if (user) {
         this.getUserLocation()
         this.setState({
@@ -46,14 +48,21 @@ export default class MapScreen extends React.Component {
       } else {
         console.log("user not logged in")
       }
-    });
+    });*/
 
-    fetch('https://meri.digitraffic.fi/api/v1/locations/latest')
-      .then(res => res.json())
-      .then(data => {
-        this.setState({ result: data.features })
+    const success = res => res.ok ? res.json() : Promise.resolve({});
+
+    const locations = fetch('https://meri.digitraffic.fi/api/v1/locations/latest')
+      .then(success);
+
+    const metadata = fetch('https://meri.digitraffic.fi/api/v1/metadata/vessels')
+      .then(success);
+
+    return Promise.all([locations, metadata])
+      .then(([locations, metadata]) => {
+        this.setState({ shipLocations: locations.features, shipMetadata: metadata })
       })
-      .catch(console.error)
+      .catch(error => console.error(error));
   }
 
   componentWillMount() {
@@ -70,15 +79,35 @@ export default class MapScreen extends React.Component {
     const currentTime = Date.now()
 
     //current time minus 1 hour in milliseconds
-    const filterTime = currentTime - 3600000
+    const filterTime = currentTime - 36000
+
+    const combinedResult = this.state.shipLocations.filter(result => result.properties.timestampExternal >= filterTime).map(locObj => ({
+      ...this.state.shipMetadata.find((metaObj) => (metaObj.mmsi === locObj.mmsi)),
+      ...locObj
+    }));
+
+    //console.log(combinedResult)
 
     //accept results when result timestamp is larger than the filterTime
-    return this.state.result.filter(result => result.properties.timestampExternal >= filterTime).map((result) => <Marker
-      key={result.mmsi}
-      coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
-      title={result.mmsi.toString()}
-      description={((currentTime - result.properties.timestampExternal) / 1000).toString()}>
-    </Marker >)
+    return combinedResult.map((result, index) => {
+      if (result.shipType > 70) {
+        return (<Marker
+          key={index}
+          coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
+          title={result.mmsi.toString()}
+          description={((currentTime - result.properties.timestampExternal) / 1000).toString() + " seconds ago " + "shiptype: " + result.shipType + " ship name: " + result.name}>
+        </Marker >)
+      } else {
+        return (
+          <Marker
+            key={index}
+            coordinate={{ latitude: result.geometry.coordinates[1], longitude: result.geometry.coordinates[0] }}
+            title={result.mmsi.toString()}
+            pinColor="green"
+            description={((currentTime - result.properties.timestampExternal) / 1000).toString() + " seconds ago " + "shiptype: " + result.shipType + " ship name: " + result.name}>
+          </Marker>)
+      }
+    });
   }
 
   getUserLocation = async () => {
@@ -158,8 +187,8 @@ export default class MapScreen extends React.Component {
             initialRegion={this.state.initialRegion}
             onRegionChangeComplete={this.onChangeValue}
             ref={ref => this.map = ref}>
-            {this.createMarkers()}
             {this.mapMarkers()}
+            {this.createMarkers()}
           </MapView>
         </View>
       </View>

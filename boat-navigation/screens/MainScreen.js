@@ -80,7 +80,8 @@ export default class MainScreen extends React.Component {
 
     //current time minus 1 minute in milliseconds
     const filterTime = currentTime - 36000
-
+    
+    //accept results when result timestamp is larger than the filterTime
     const combinedResult = this.state.shipLocations.filter(result => result.properties.timestampExternal >= filterTime).map(locObj => ({
       ...this.state.shipMetadata.find((metaObj) => (metaObj.mmsi === locObj.mmsi)),
       ...locObj
@@ -88,7 +89,6 @@ export default class MainScreen extends React.Component {
 
     //console.log(combinedResult)
 
-    //accept results when result timestamp is larger than the filterTime
     return combinedResult.map((result, index) => {
       if (result.shipType > 70) {
         return (<Marker

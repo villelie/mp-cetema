@@ -78,7 +78,7 @@ export default class MainScreen extends React.Component {
     //get current time in milliseconds from unix epoch
     const currentTime = Date.now()
 
-    //current time minus 1 hour in milliseconds
+    //current time minus 1 minute in milliseconds
     const filterTime = currentTime - 36000
 
     const combinedResult = this.state.shipLocations.filter(result => result.properties.timestampExternal >= filterTime).map(locObj => ({

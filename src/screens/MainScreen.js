@@ -122,10 +122,14 @@ const MainScreen = () => {
       >
         {shipMarkers.map((res, i) => {
           const currentTime = Date.now();
-          const vesselIcon =
+          const vesselIcon = () => {
+            if (60 <= res.Shiptype <= 69 ) return require('../../assets/cruiseicon.png')
+            else if (70 <= res.Shiptype <= 89 ) return require('../../assets/cargoshipicon.png')
+            else return require('../../assets/boaticon.png')}
+          /*const vesselIcon =
             res.shipType > 60
               ? require("../../assets/cargoshipicon.png")
-              : require("../../assets/boaticon.png");
+              : require("../../assets/boaticon.png");*/
           return (
             <Marker
               key={i}
@@ -137,7 +141,7 @@ const MainScreen = () => {
               description={`${
                 (currentTime - res.properties.timestampExternal) / 1000
               }s ago, shiptype: ${res.shipType}, ship name: ${res.name}`}
-              image={vesselIcon}
+              image={vesselIcon()}
             />
           );
         })}

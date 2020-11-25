@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
   Body,
   Button,
@@ -18,10 +18,29 @@ const InfoScreen = (props) => {
       .then((data) => setNauticalWarnings(data.features));
   };
 
+  const fetchToken = () => {
+    fetch('https://pfa.foreca.com/authorize/token?user=daniel-finnerman&password=LQ7gKLa3mzTkFoWgTh', {
+      method: 'POST'
+    })
+      .then((response) => response.json())
+      //If response is in json then in success
+      .then((responseJson) => {
+        //Success
+        console.log(responseJson.access_token);
+        token = responseJson.access_token;
+        fetch("https://pfa.foreca.com/api/v1/marine/forecast/hourly/:location?location= 24.940266, 60.148091&token=" + token)
+          .then((response) => response.json())
+          .then((responseJson) => {
+            console.log(responseJson)
+          })
+      });
+  }
+
   useEffect(() => {
     let mounted = true;
     if (mounted) {
       fetchData();
+      fetchToken();
     }
     return () => (mounted = false);
   }, []);
@@ -30,6 +49,7 @@ const InfoScreen = (props) => {
     <Container>
       <Content>
         <Body>
+          <Text>aSD</Text>
           {nauticalWarnings.map((warning, i) => {
             if (i < 3) {
               return (

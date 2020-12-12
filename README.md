@@ -2,13 +2,13 @@
 
 [![Build Status](https://travis-ci.com/villelie/mp-cetema.svg?branch=master)](https://travis-ci.com/villelie/mp-cetema.svg?branch=master)
 
-### Made with
+## Made with
 - Expo
 - React Native
 - Native Base
 - Firebase
 
-### Installation
+## Installation
 We are assuming you have installed [npm](https://www.npmjs.com/get-npm) and [Yarn](https://classic.yarnpkg.com/en/docs/install/) and have globally installed expo-cli with npm: ``npm i -g expo-cli``
 
 Clone the repository and change to cloned folder
@@ -32,7 +32,7 @@ Change these API keys and cofigs to your own:
 
 Firebase needs to be configured just by adding a new web project. Firestore does not need any configuration, App will build data structure on its own.
 
-### Build
+## Build
 Build project with expo-cli.
 
 For android:
@@ -48,5 +48,5 @@ For publishing app to expo.io:
 expo publish
 ```
 
-### :warning: Expo build might not work.
+## :warning: Expo build might not work.
 [expo.io/@villeliekari/projects/mp-cetema](https://expo.io/@villeliekari/projects/mp-cetema)

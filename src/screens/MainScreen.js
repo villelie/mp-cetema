@@ -213,7 +213,6 @@ const MainScreen = (props) => {
         timeInterval: 5000,
       },
       (_location) => {
-        console.log("xdxdxdx", boatName)
         setUserSpeed(_location.coords.speed);
         setLocation(_location);
         setLocationState(true);

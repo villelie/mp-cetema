@@ -48,33 +48,33 @@ const MainScreen = (props) => {
   const GeoFirestore = geofirestore.initializeApp(firebase.firestore());
 
   const fetchData = async () => {
-    console.log("Fetching data...");
-    const success = (res) => (res.ok ? res.json() : Promise.resolve({}));
-    const radius = await asyncStorage.get("@fetchRadius");
-    const time = await asyncStorage.get("@fetchTime");
-    const date = new Date();
-    date.setMinutes(date.getMinutes() - (time ? time : 30));
+    if (location) {
+      console.log("Fetching data...");
+      const success = (res) => (res.ok ? res.json() : Promise.resolve({}));
+      const radius = await asyncStorage.get("@fetchRadius");
+      const time = await asyncStorage.get("@fetchTime");
+      const date = new Date();
+      date.setMinutes(date.getMinutes() - (time ? time : 30));
 
-    const url = `https://meri.digitraffic.fi/api/v1/locations/latitude/${
-      location ? location.coords.latitude : "60.1587262"
-    }/longitude/${location ? location.coords.longitude : "24.922834"}/radius/${
-      radius ? radius : 100
-    }/from/${date.toISOString()}`;
+      const url = `https://meri.digitraffic.fi/api/v1/locations/latitude/${location ? location.coords.latitude : "60.1587262"
+        }/longitude/${location ? location.coords.longitude : "24.922834"}/radius/${radius ? radius : 100
+        }/from/${date.toISOString()}`;
 
-    const locations = fetch(url).then(success);
-    const metadata = fetch(
-      "https://meri.digitraffic.fi/api/v1/metadata/vessels"
-    ).then(success);
+      const locations = fetch(url).then(success);
+      const metadata = fetch(
+        "https://meri.digitraffic.fi/api/v1/metadata/vessels"
+      ).then(success);
 
-    try {
-      const [locationsFetch, metadataFetch] = await Promise.all([
-        locations,
-        metadata,
-      ]);
-      setShipLocations(locationsFetch.features);
-      setShipMetadata(metadataFetch);
-    } catch (err) {
-      return console.log(err);
+      try {
+        const [locationsFetch, metadataFetch] = await Promise.all([
+          locations,
+          metadata,
+        ]);
+        setShipLocations(locationsFetch.features);
+        setShipMetadata(metadataFetch);
+      } catch (err) {
+        return console.log(err);
+      }
     }
   };
 
@@ -194,7 +194,6 @@ const MainScreen = (props) => {
       } catch (err) {
         Alert.alert(err.message);
       }
-      setLocationState(true);
     }
   };
 
@@ -214,8 +213,10 @@ const MainScreen = (props) => {
         timeInterval: 5000,
       },
       (_location) => {
+        console.log("xdxdxdx", boatName)
         setUserSpeed(_location.coords.speed);
         setLocation(_location);
+        setLocationState(true);
         updateUserLocation(_location);
       }
     );
@@ -404,6 +405,12 @@ const MainScreen = (props) => {
     setNauticalWarningsActive(isActive => !isActive)
   }
 
+  const getSavedFromAsyncStorage = async () => {
+    const savedUpdateInterval = await asyncStorage.get("@fetchInterval");
+    if (savedUpdateInterval)
+      setSavedUpdateInterval(savedUpdateInterval * 60000);
+  };
+
   const getUserBoat = async () => {
     await firebase
       .firestore()
@@ -419,12 +426,6 @@ const MainScreen = (props) => {
       });
   };
 
-  const getSavedFromAsyncStorage = async () => {
-    const savedUpdateInterval = await asyncStorage.get("@fetchInterval");
-    if (savedUpdateInterval)
-      setSavedUpdateInterval(savedUpdateInterval * 60000);
-  };
-
   useEffect(() => {
     const interval = setInterval(
       () => {
@@ -436,12 +437,24 @@ const MainScreen = (props) => {
   }, [savedUpdateInterval]);
 
   useEffect(() => {
+    getUserBoat();
+    fetchWarnings();
+    getSavedFromAsyncStorage();
+  }, []);
+
+  useEffect(() => {
+    if (boatName && boatType)
+      getUserLocation();
+  }, [boatName, boatType]);
+
+  useEffect(() => {
     receiveUpdatesOnSosAlert();
   }, [isSendingSosAlert]);
 
   useEffect(() => {
     getSosAlert();
     getUserMarkers();
+    fetchData();
   }, [locationState]);
 
   useEffect(() => {
@@ -464,14 +477,6 @@ const MainScreen = (props) => {
     getShipMarkers();
   }, [shipLocations, shipMetadata]);
 
-  useEffect(() => {
-    getUserLocation();
-    fetchData();
-    fetchWarnings();
-    getSavedFromAsyncStorage();
-    getUserBoat();
-  }, []);
-
   return (
     <Container>
       <View style={styles.mapContainer}>
@@ -486,11 +491,11 @@ const MainScreen = (props) => {
           region={
             followUserActive === true
               ? {
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude,
-                  latitudeDelta: 0.02,
-                  longitudeDelta: 0.02,
-                }
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
+              }
               : null
           }
           showsMyLocationButton={false}
@@ -506,8 +511,8 @@ const MainScreen = (props) => {
                   ? require("../../assets/cargoshipiconDark.png")
                   : require("../../assets/cargoshipicon.png")
                 : isDarkTheme
-                ? require("../../assets/boaticonDark.png")
-                : require("../../assets/boaticon.png");
+                  ? require("../../assets/boaticonDark.png")
+                  : require("../../assets/boaticon.png");
             if (shipMarkersActive === true) {
               return (
                 <Marker
@@ -517,16 +522,15 @@ const MainScreen = (props) => {
                     longitude: res.geometry.coordinates[0],
                   }}
                   title={res.mmsi.toString()}
-                  description={`${
-                    (currentTime - res.properties.timestampExternal) / 1000
-                  }s ago, shiptype: ${res.shipType}, ship name: ${res.name}`}
+                  description={`${(currentTime - res.properties.timestampExternal) / 1000
+                    }s ago, shiptype: ${res.shipType}, ship name: ${res.name}`}
                   image={vesselIcon}
                 >
                   <Callout
                     onPress={() => {
                       Linking.openURL(
                         "https://www.marinetraffic.com/fi/ais/details/ships/mmsi:" +
-                          res.mmsi.toString()
+                        res.mmsi.toString()
                       );
                     }}
                   >
@@ -566,9 +570,8 @@ const MainScreen = (props) => {
                     longitude: res.g.geopoint.longitude,
                   }}
                   title={res.username}
-                  description={`type: ${res.boatType}, name: ${
-                    res.boatName
-                  }, time: ${(Date.now() - res.timestamp) / 1000}s ago`}
+                  description={`type: ${res.boatType}, name: ${res.boatName
+                    }, time: ${(Date.now() - res.timestamp) / 1000}s ago`}
                   image={icon}
                 >
                   <Callout>
@@ -589,37 +592,38 @@ const MainScreen = (props) => {
           })}
           {nauticalWarnings.map((res, i) => {
             if (nauticalWarningsActive === true) {
-            return (
-              <Marker
-                key={i}
-                coordinate={{
-                  latitude: res.geometry.coordinates[1],
-                  longitude: res.geometry.coordinates[0],
-                }}
-                image={require("../../assets/warning.png")}
-              >
-                <Callout
-                  style={{ flex: 1, width: 250, height: 200 }}
-                  onPress={() =>
-                    props.navigation.navigate("Nautical Warning", {
-                      res,
-                    })
-                  }
+              return (
+                <Marker
+                  key={i}
+                  coordinate={{
+                    latitude: res.geometry.coordinates[1],
+                    longitude: res.geometry.coordinates[0],
+                  }}
+                  image={require("../../assets/warning.png")}
                 >
-                  <H3>{res.properties.locationEn}</H3>
-                  <Text>{res.properties.contentsEn}</Text>
-                  <Text style={{ fontWeight: "bold" }}>
-                    {`Published: ${res.properties.publishingTime.substring(
-                      8,
-                      10
-                    )}.` +
-                      `${res.properties.publishingTime.substring(5, 7)}.` +
-                      `${res.properties.publishingTime.substring(0, 4)}`}
-                  </Text>
-                </Callout>
-              </Marker>
-            );
-          }})}
+                  <Callout
+                    style={{ flex: 1, width: 250, height: 200 }}
+                    onPress={() =>
+                      props.navigation.navigate("Nautical Warning", {
+                        res,
+                      })
+                    }
+                  >
+                    <H3>{res.properties.locationEn}</H3>
+                    <Text>{res.properties.contentsEn}</Text>
+                    <Text style={{ fontWeight: "bold" }}>
+                      {`Published: ${res.properties.publishingTime.substring(
+                        8,
+                        10
+                      )}.` +
+                        `${res.properties.publishingTime.substring(5, 7)}.` +
+                        `${res.properties.publishingTime.substring(0, 4)}`}
+                    </Text>
+                  </Callout>
+                </Marker>
+              );
+            }
+          })}
         </MapView>
         <View style={styles.speedometerContainer}>
           <Speedometer
@@ -646,7 +650,7 @@ const MainScreen = (props) => {
         <Fab
           active={active}
           direction="up"
-          containerStyle={{ }}
+          containerStyle={{}}
           style={styles.sosFabStyle}
           position="bottomRight"
           onPress={() => sendSosConfirm()}>
@@ -682,9 +686,9 @@ const MainScreen = (props) => {
               marginBottom: 55
             }}
             onPress={() => toggleFollowUser()}>
-              {followUserActive === false ? (
-                <Icon name="md-navigate" />
-              ) : (
+            {followUserActive === false ? (
+              <Icon name="md-navigate" />
+            ) : (
                 <Icon color="red" name="md-close" />
               )}
           </Button>
